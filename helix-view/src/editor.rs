@@ -9,8 +9,6 @@ use crate::{
     Document, DocumentId, View, ViewId,
 };
 
-use futures_util::future;
-
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap},
@@ -36,6 +34,9 @@ use helix_core::{
     Change,
 };
 use helix_core::{Position, Selection};
+
+#[cfg(feature = "lsp")]
+use futures_util::future;
 
 #[cfg(feature = "dap")]
 use futures_util::stream::select_all::SelectAll;
@@ -425,6 +426,7 @@ pub struct Editor {
     pub registers: Registers,
     pub macro_recording: Option<(char, Vec<KeyEvent>)>,
     pub theme: Theme,
+    #[cfg(feature = "lsp")]
     pub language_servers: helix_lsp::Registry,
 
     #[cfg(feature = "dap")]
@@ -484,7 +486,6 @@ impl Editor {
         syn_loader: Arc<syntax::Loader>,
         config: Box<dyn DynAccess<Config>>,
     ) -> Self {
-        let language_servers = helix_lsp::Registry::new();
         let conf = config.load();
         let auto_pairs = (&conf.auto_pairs).into();
 
@@ -499,7 +500,8 @@ impl Editor {
             selected_register: None,
             macro_recording: None,
             theme: theme_loader.default(),
-            language_servers,
+            #[cfg(feature = "lsp")]
+            language_servers: helix_lsp::Registry::new(),
             #[cfg(feature = "dap")]
             debugger: None,
             #[cfg(feature = "dap")]
@@ -570,12 +572,14 @@ impl Editor {
         self._refresh();
     }
 
+    #[cfg(feature = "lsp")]
     /// Refreshes the language server for a given document
     pub fn refresh_language_server(&mut self, doc_id: DocumentId) -> Option<()> {
         let doc = self.documents.get_mut(&doc_id)?;
         Self::launch_language_server(&mut self.language_servers, doc)
     }
 
+    #[cfg(feature = "lsp")]
     /// Launch a language server for a given document
     fn launch_language_server(ls: &mut helix_lsp::Registry, doc: &mut Document) -> Option<()> {
         // if doc doesn't have a URL it's a scratch buffer, ignore it
@@ -613,7 +617,7 @@ impl Editor {
                 doc.set_language_server(Some(language_server));
             }
         }
-        Some(())
+        Some(()) // TODO: what's the deal with the return type
     }
 
     fn _refresh(&mut self) {
@@ -757,6 +761,7 @@ impl Editor {
         } else {
             let mut doc = Document::open(&path, None, Some(self.syn_loader.clone()))?;
 
+            #[cfg(feature = "lsp")]
             let _ = Self::launch_language_server(&mut self.language_servers, &mut doc);
 
             self.new_document(doc)
@@ -794,6 +799,7 @@ impl Editor {
             );
         }
 
+        #[cfg(feature = "lsp")]
         if let Some(language_server) = doc.language_server() {
             tokio::spawn(language_server.text_document_did_close(doc.identifier()));
         }
@@ -922,6 +928,7 @@ impl Editor {
         }
     }
 
+    #[cfg(feature = "lsp")]
     /// Closes language servers with timeout. The default timeout is 500 ms, use
     /// `timeout` parameter to override this.
     pub async fn close_language_servers(

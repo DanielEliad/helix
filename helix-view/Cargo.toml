@@ -10,7 +10,7 @@ repository = "https://github.com/helix-editor/helix"
 homepage = "https://helix-editor.com"
 
 [features]
-# default = ["dap", "lsp"]
+default = ["dap", "lsp"]
 lsp = ["helix-lsp", "tokio-runtime"]
 dap = ["helix-dap", "tokio-stream", "tokio-runtime"]
 tokio-runtime = ["tokio"]
@@ -23,8 +23,10 @@ anyhow = "1"
 helix-core = { version = "0.6", path = "../helix-core" }
 helix-graphics = { version = "0.6", path = "../helix-graphics" }
 helix-lsp = { version = "0.6", path = "../helix-lsp", optional = true }
+signal-hook = "0.3"
 helix-dap = { version = "0.6", path = "../helix-dap", optional = true }
 helix-loader = { version = "0.6", path = "../helix-loader" }
+ropey = { version = "1.4", default-features = false }
 tokio-stream = { version = "0.1", optional = true }
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "io-util", "io-std", "time", "process", "macros", "fs", "parking_lot", "sync"], optional = true }
 
@@ -70,3 +72,6 @@ which = "4.2"
 
 [target.'cfg(windows)'.dependencies]
 clipboard-win = { version = "4.4", features = ["std"] }
+
+[target.'cfg(not(windows))'.dependencies]  # https://github.com/vorner/signal-hook/issues/100
+signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }

@@ -359,9 +359,9 @@ impl EditorView {
         surface: &mut Surface,
         theme: &Theme,
         highlights: H,
-        whitespace: &helix_view::editor::WhitespaceConfig,
+        whitespace: &crate::editor::WhitespaceConfig,
     ) {
-        use helix_view::editor::WhitespaceRenderValue;
+        use crate::editor::WhitespaceRenderValue;
 
         // It's slightly more efficient to produce a full RopeSlice from the Rope, then slice that a bunch
         // of times than it is to always call Rope::slice/get_slice (it will internally always hit RSEnum::Light).

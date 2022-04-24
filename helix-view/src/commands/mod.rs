@@ -1763,12 +1763,6 @@ fn search_selection(cx: &mut Context) {
     cx.editor.set_status(msg);
 }
 
-#[cfg(not(feature = "term"))]
-fn global_search(cx: &mut Context) {
-    // TODO
-}
-
-#[cfg(feature = "term")]
 fn global_search(cx: &mut Context) {
     use grep_regex::RegexMatcherBuilder;
     use grep_searcher::{sinks, BinaryDetection, SearcherBuilder};
@@ -4425,8 +4419,8 @@ fn shell_prompt(cx: &mut Context, prompt: Cow<'static, str>, behavior: ShellBeha
 }
 
 fn suspend(_cx: &mut Context) {
-    // #[cfg(not(windows))]
-    // signal_hook::low_level::raise(signal_hook::consts::signal::SIGTSTP).unwrap();
+    #[cfg(not(windows))]
+    signal_hook::low_level::raise(signal_hook::consts::signal::SIGTSTP).unwrap();
 }
 
 fn add_newline_above(cx: &mut Context) {

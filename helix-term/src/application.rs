@@ -84,7 +84,7 @@ impl Application {
 
         let config = match std::fs::read_to_string(config_dir.join("config.toml")) {
             Ok(config) => toml::from_str(&config)
-                .map(crate::keymap::merge_keys)
+                .map(crate::config::merge_keys)
                 .unwrap_or_else(|err| {
                     eprintln!("Bad config: {}", err);
                     eprintln!("Press <ENTER> to continue with default config");
@@ -134,10 +134,9 @@ impl Application {
         });
         let syn_loader = std::sync::Arc::new(syntax::Loader::new(syn_loader_conf));
 
-        let mut compositor = Compositor::new()?;
         let config = Arc::new(ArcSwap::from_pointee(config));
         let mut editor = Editor::new(
-            area,
+            compositor.size(),
             theme_loader.clone(),
             syn_loader.clone(),
             Box::new(Map::new(Arc::clone(&config), |config: &Config| {
